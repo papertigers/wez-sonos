@@ -274,6 +274,14 @@ impl SonosDevice {
         .await
     }
 
+    /// Tells a device to use its own local queue.
+    /// This is useful for example when a device first powers on and doesn't yet
+    /// have a proper transport uri that can be used for queuing tracks.
+    pub async fn set_queue_to_self(&self) -> Result<()> {
+        self.set_av_transport_uri(&format!("x-rincon-queue:{}#0", self.uuid().await?), None)
+            .await
+    }
+
     pub async fn queue_prepend(
         &self,
         uri: &str,
