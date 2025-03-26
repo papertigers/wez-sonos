@@ -60,6 +60,8 @@ pub enum Error {
     LastChangeFormatUnexpected(String),
     #[error("Device reports None for volume")]
     VolumeNone,
+    #[error("Device missing from zone groups")]
+    ZoneGroupMemberMissing,
 }
 
 impl Error {
@@ -331,6 +333,19 @@ impl SonosDevice {
 
     pub fn url(&self) -> &Url {
         &self.url
+    }
+
+    // Returns the uuid of a device
+    pub async fn uuid(&self) -> Result<String> {
+        let uuid = self
+            .get_zone_group_state()
+            .await?
+            .into_iter()
+            .flat_map(|zone_group| zone_group.members)
+            .find(|member| member.location == self.url.as_str())
+            .map(|member| member.uuid);
+
+        uuid.ok_or(Error::ZoneGroupMemberMissing)
     }
 }
 
